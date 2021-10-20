@@ -1,6 +1,5 @@
-[27-09 10:44] Juan Carlos Avila Castro
-    FROM openanalytics/r-base
- MAINTAINER Juan C. Avila "j.avilac11@gmail.com"
+ FROM openanalytics/r-base
+ MAINTAINER RPS 
 # 01-09-2021 . OBSJCA este archivo DOKERFILE, es para la ultima version (version2) de la app de calidad entregada el dia 31-08-2021.
 # system libraries of general use
 RUN apt-get update && apt-get install -y \
