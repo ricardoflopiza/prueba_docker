@@ -37,7 +37,9 @@ RUN R -e "install.packages(c('devtools','shinyFeedback', 'calidad', 'shiny', 'ha
 RUN R -e "devtools::install_github('inesscc/calidad')"
 RUN mkdir /root/calidadv2
 COPY R /root/calidadv2
-# COPY Rprofile.site /usr/lib/R/etc/
-EXPOSE 3838
-CMD ["R","-e", "shiny::runApp('/root/calidadv2')"]
+COPY Rprofile.site /usr/lib/R/etc/
 
+CMD ["R","-e", "shiny::runApp('/root/calidadv2')"]
+#CMD ["R", "-e", "shiny::runApp('/root/calidadv2', host='0.0.0.0', port=3838)"]
+
+EXPOSE 3838
