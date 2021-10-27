@@ -103,7 +103,7 @@ Esta aplicación permite implementar el estándar de calidad para las estimacion
                                      status = "primary",
                                      justified = TRUE
                                    ),
-                                   h5("EnPRIBANDO EFSASGDGDGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGo cargar una base de datos del INE"),
+                                   h5("En esta Sección puedes seleccionar la opción de cargar una base de datos desde tu computador, o cargar una base de datos del INE"),
                                    uiOutput("datos_locales"),
                                    uiOutput("DescargaINE"),
                                    ## render selección de variables de interes, y de cruce
