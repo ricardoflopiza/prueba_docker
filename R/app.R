@@ -3,7 +3,8 @@
 ## Pendientes ####
 
 # La base de la ENUT se descarga 
-
+ 
+ 
 ### carga de paquetes ####
 library(shinyFeedback)
 library(calidad)
