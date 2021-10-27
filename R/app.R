@@ -28,10 +28,17 @@ library(tibble)
 library(plotly)
 
 # Cargar funciones ####
-source("download_data.R")
+#source("download_data.R")
 source("create_tabulado.R")
 source("create_plot.R")
 #source("utils.R")
+
+
+#archivos_ine <- list.files("calidad/data/")
+
+archivos_ine <- c("enusc_2018.feather","enusc_2019.feather","enusc_2020.feather","epf_hogares.feather","epf_personas_ing.feather","esi_2020.feather")
+
+nom_arch_ine <- archivos_ine %>% stringr::str_remove_all(".feather") 
 
 # posibilidad nombres de variables DC"
 fact_exp = c("Fact_pers","Fact_Pers","fe","fact_cal", "fact_pers","fact_pers","fe","fact_cal", "fact_cal_esi","FACT_PERS","FACT_PERS","FE","FACT_CAL","FACT_CAL_ESI","wgt1","EXP","exp","Exp")
@@ -46,7 +53,7 @@ show_wrn = T
 
 ui <- div(shinyFeedback::useShinyFeedback(),
           useShinyalert(),
-            shinyjs::useShinyjs(),
+          shinyjs::useShinyjs(),
           # tags$head(
           #   tags$link(rel = "stylesheet", type = "text/css", href = "maqueta.css")
           # ), 
@@ -93,11 +100,11 @@ Esta aplicación permite implementar el estándar de calidad para las estimacion
                                    radioGroupButtons(
                                      inputId = "Id004",
                                      label = h4("Seleccione desde donde cargar base de datos"), 
-                                     choices = c("Cargar datos", "Descarga datos INE"),
+                                     choices = c("Cargar datos propios", "Trabajar con datos INE"),
                                      status = "primary",
                                      justified = TRUE
                                    ),
-                                   h5("En esta Sección puedes seleccionar la opción de cargar una base de datos desde tu computador, o cargar una base de datos de INE"),
+                                   h5("En esta Sección puedes seleccionar la opción de cargar una base de datos desde tu computador, o cargar una base de datos del INE"),
                                    uiOutput("datos_locales"),
                                    uiOutput("DescargaINE"),
                                    ## render selección de variables de interes, y de cruce
@@ -130,7 +137,6 @@ Esta aplicación permite implementar el estándar de calidad para las estimacion
                                 uiOutput("tituloTAB")
                       )
                     )
-                    
                 )
               )
           ),
@@ -190,7 +196,7 @@ server <- function(input, output, session) {
   options(shiny.maxRequestSize=30*1024^2, scipen=999) # to the top of server.R would increase the limit to 30MB.  
   
   output$datos_locales = renderUI({
-    req(input$Id004 == "Cargar datos")
+    req(input$Id004 == "Cargar datos propios")
     tagList(
       ## input de archivo local -----
       fileInput(inputId = "file", label = h4("Carga una base de datos desde tu computador"),buttonLabel = "Buscar" , placeholder = ".sav .rds .dta .sas .xlsx .csv .feather")
@@ -199,19 +205,14 @@ server <- function(input, output, session) {
   
   
   output$DescargaINE = renderUI({
-    req(input$Id004 == "Traer datos desde el INE")
+    req(input$Id004 == "Trabajar con datos INE")
     tagList(
       ## input archivo página del INE
-      selectInput("base_web_ine", label = h4("Descarga una base de datos desde la web del INE"),
-                  choices = c("epf personas" = "epf", 
-                              #  "ene (última trimestre)" = "ene",
-                              "enusc", 
-                              "esi"
-                              #  "enut"
-                  ),  
+      selectInput("base_web_ine", label = h4("Utilizar una base de datos del INE"),
+                  choices = nom_arch_ine,  
                   multiple = F),
       
-      actionButton("base_ine", label = "Descargar base"),
+      actionButton("base_ine", label = "Cargar base desde el INE"),
       
     )
   })
@@ -271,13 +272,15 @@ server <- function(input, output, session) {
     
     # Modal para descarga
     show_modal_spinner() # show the modal window
-    
-    #Descargar la base de datos en archivo temporal
-    temp <- tempfile()
-    datos <- download_data(input$base_web_ine)
-    
-    # Modal para descarga
+    #   
+    #   #Descargar la base de datos en archivo temporal
+    #  # temp <- tempfile()
+    # #  datos <- download_data(input$base_web_ine)
+    datos <- feather::read_feather(paste0("data/",input$base_web_ine,".feather"))
+    #   # Modal para descarga
     remove_modal_spinner() # remove it when done
+    
+    
     
     datos
   }) 
@@ -567,7 +570,7 @@ server <- function(input, output, session) {
   ### warning alert var denom ####
   
   wrn_var_denom <- reactive({
-  #  req(input$tipoCALCULO == "Proporción", input$varDENOM)
+    #  req(input$tipoCALCULO == "Proporción", input$varDENOM)
     if(show_wrn == F | is.null(input$varDENOM)){
       
       even = FALSE
@@ -621,7 +624,7 @@ server <- function(input, output, session) {
           
           even <- sum(es_prop_subpop$es_prop_subpop) != nrow(es_prop_subpop)
           
-          shinyFeedback::feedbackWarning("varSUBPOB",even,"subpop debe ser una variable dicotómica!")
+          shinyFeedback::feedbackWarning("varSUBPOB",even,"subpop debe ser una variable dummy!")
           
           even
           
