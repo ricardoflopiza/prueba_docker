@@ -106,6 +106,7 @@ Esta aplicación permite implementar el estándar de calidad para las estimacion
                                    h5("En esta Sección puedes seleccionar la opción de cargar una base de datos desde tu computador, o cargar una base de datos del INE"),
                                    uiOutput("datos_locales"),
                                    uiOutput("DescargaINE"),
+                                   verbatimTextOutput("Prueba"),
                                    ## render selección de variables de interes, y de cruce
                                    # uiOutput("seleccion1"),
                                    selectInput("varINTERES", label = h5("Variable de interés"),choices = "",  multiple = F),
@@ -212,7 +213,6 @@ server <- function(input, output, session) {
                   multiple = F),
       
       actionButton("base_ine", label = "Cargar base desde el INE"),
-      
     )
   })
   
@@ -279,8 +279,6 @@ server <- function(input, output, session) {
     #   # Modal para descarga
     remove_modal_spinner() # remove it when done
     
-    
-    
     datos
   }) 
   
@@ -296,7 +294,31 @@ server <- function(input, output, session) {
   observeEvent(input$base_ine, {
     datos(descarga())
   })
+
+  ###* reseteamos valores ####
+
   
+#  is.null(input$base_ine)
+
+   # reactive({
+   # 
+   #    #req(input$)
+   #    if(is.null(input$varINTERES)){
+   # 
+   #    input$varINTERES = NULL
+   #    input$varDENOM = NULL
+   #    input$varCRUCE = NULL
+   #    input$varSUBPOB = ""
+   #    input$varFACT1 = NULL
+   #    input$varCONGLOM = NULL
+   #    input$varESTRATOS = NULL
+   #    input$tipoCALCULO  = NULL
+   #    input$IC = NULL
+   #    tabuladoOK <- reactiveVal(NULL)
+   #    }
+   #    
+   #   })
+   # 
   ### EXTRACT: names variables input datos ####
   variables_int <- reactive({
     if (!is.null(input$file)) {
@@ -379,7 +401,7 @@ server <- function(input, output, session) {
   ### RENDER: IN MAIN PANEL -----
   ### Render título tabulado 
   output$tituloTAB <- renderUI({
-    req(!warning_resum(), input$varINTERES)
+ #   req(!warning_resum())
     req(input$actionTAB, tabuladoOK())
     
     tagList(
@@ -403,11 +425,14 @@ server <- function(input, output, session) {
   
   
   #### + O U T P U T S + ####
+  tabuladoOK <- eventReactive(input$varINTERES == "",{
+                        NULL
+  })
   
   ### CREATE: tabulados  ----
-  
+
   tabuladoOK =  eventReactive(input$actionTAB,{
-    
+    isolate({
     # para generarse necesita que no hayan warnings
     req(!warning_resum(), input$varINTERES,input$varCONGLOM, input$varESTRATOS, input$varFACT1)
     
@@ -449,7 +474,12 @@ server <- function(input, output, session) {
     }  
     
     tabulado 
+  
   })
+    })
+  
+  
+
   
   ### RENDER: Tabulado ####
   output$tabulado  <- renderText({
@@ -754,12 +784,27 @@ server <- function(input, output, session) {
   
   ##### * Pruebas de outputs * ####  
   
+  output$Prueba <- renderPrint({
+    req(debug == T)
+    list(   
+      paste("inputs file null? =",is.null(input$file)),
+      paste("input file =",input$file),
+      paste("select base web null? =",is.null(input$base_web_ine)),
+      paste("select base web =",input$base_web_ine),
+         paste("action Carga base =",is.null(input$base_ine)),
+         paste("input$base_ine =",input$base_ine)
+         )    })
+  
+  
   output$tipoCalText <- renderPrint({
     req(debug == T)
-    list(paste("Tipo de calculo:",input$tipoCALCULO),
-         paste("acctionButton =",is.null(input$actionTAV)),
+    list(paste("Tabulado :",tabuladoOK()),
+         paste("Tipo de calculo:",input$tipoCALCULO),
+         paste("actionButton mull?=",is.null(input$actionTAB)),
+         paste("action Carga base mull?=",is.null(input$base_ine)),
          paste("war_varINTERES =",wrn_var_int()),
          paste("war_varDENOM =",wrn_var_denom()),
+         paste("varINTERES == ''? =",input$varINTERES == ""),
          paste("varINTERES =",input$varINTERES),
          paste("warn_var_subpob =",wrn_var_subpop()),
          paste("warn_var_factEXP =",wrn_var_factexp()),
