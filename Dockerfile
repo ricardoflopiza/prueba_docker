@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y \
 # basic shiny functionality
 RUN R -e "install.packages(c('shiny', 'rmarkdown'), repos='https://cloud.r-project.org/')"
 # install dependencies Shiny_Calidad App
-RUN R -e "install.packages(c('devtools','shinyFeedback', 'calidad', 'shiny', 'haven', 'labelled', 'dplyr', 'openxlsx', 'sjmisc',  'readxl','survey','feather', 'shinyWidgets', 'rlang', 'kableExtra', 'shinycssloaders', 'readr', 'shinybusy', 'shinyalert', 'writexl', 'shinyjs', 'tibble', 'plotly'), repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages(c('devtools','shinyFeedback', 'calidad', 'shiny', 'haven', 'labelled', 'dplyr', 'openxlsx', 'sjmisc',  'readxl','survey','feather', 'shinyWidgets', 'rlang', 'kableExtra', 'shinycssloaders', 'readr', 'shinybusy', 'shinyalert', 'writexl', 'shinyjs', 'tibble', 'plotly','shinyBS'), repos='http://cran.rstudio.com/')"
 RUN R -e "devtools::install_github('inesscc/calidad')"
 RUN mkdir /root/calidadv2
 COPY R /root/calidadv2

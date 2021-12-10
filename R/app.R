@@ -25,13 +25,35 @@ library(shinyjs)
 library(tibble)
 library(plotly)
 library(feather)
+library(shinyBS)
 
 # Cargar funciones ####
 #source("download_data.R")
 source("create_tabulado.R")
 source("create_plot.R")
-#source("utils.R")
+source("texto_tooltips.R")
 
+
+# Función radiobutton
+radioTooltip <- function(id, choice, title, placement = "bottom", trigger = "hover", options = NULL){
+  
+  options = shinyBS:::buildTooltipOrPopoverOptionsList(title, placement, trigger, options)
+  options = paste0("{'", paste(names(options), options, sep = "': '", collapse = "', '"), "'}")
+  bsTag <- shiny::tags$script(shiny::HTML(paste0("
+    $(document).ready(function() {
+      setTimeout(function() {
+        $('input', $('#", id, "')).each(function(){
+          if(this.getAttribute('value') == '", choice, "') {
+            opts = $.extend(", options, ", {html: true});
+            $(this.parentElement).tooltip('destroy');
+            $(this.parentElement).tooltip(opts);
+          }
+        })
+      }, 500)
+    });
+  ")))
+  htmltools::attachDependencies(bsTag, shinyBS:::shinyBSDep)
+}
 
 #archivos_ine <- list.files("calidad/data/")
 
@@ -109,17 +131,30 @@ Esta aplicación permite implementar el estándar de calidad para las estimacion
                                    verbatimTextOutput("Prueba"),
                                    ## render selección de variables de interes, y de cruce
                                    # uiOutput("seleccion1"),
+                                  
                                    selectInput("varINTERES", label = h5("Variable de interés"),choices = "",  multiple = F),
+                                   bsTooltip("varINTERES", text_varINT, placement = "rigth", trigger = "hover", options = list(container = "body")),
                                    #textOutput("wrn_var_int"),
                                    
-                                   uiOutput("denominador"),
-                                   radioButtons("tipoCALCULO", "¿Qué tipo de cálculo deseas realizar?",
-                                                choices = list("Media","Proporción","Suma variable Continua","Conteo casos", "Mediana"), inline = F ),
-                                   selectInput("varCRUCE", label = h5("Desagregación"), choices = "", selected = NULL, multiple = T),
+        uiOutput("denominador"),
+        radioButtons("tipoCALCULO", "¿Qué tipo de cálculo deseas realizar?",
+                      choices = list("Media","Proporción","Suma variable Continua","Conteo casos", "Mediana"), inline = F ),
+        radioTooltip(id = "tipoCALCULO", choice = "Media", title = text_media, placement = "top", trigger = "focus"),
+        radioTooltip(id = "tipoCALCULO", choice = "Proporción", title = text_proporcion, placement = "top", trigger = "focus"),
+        radioTooltip(id = "tipoCALCULO", choice = "Suma variable Continua", title = text_sum_cont, placement = "top", trigger = "focus"),
+        radioTooltip(id = "tipoCALCULO", choice = "Conteo casos", title = text_conteo_casos, placement = "top", trigger = "focus"),
+        radioTooltip(id = "tipoCALCULO", choice = "Mediana", title = text_sum_mediana, placement = "top", trigger = "focus"),
+  selectInput("varCRUCE", label = h5("Desagregación"), choices = "", selected = NULL, multiple = T),
+        bsTooltip("varCRUCE", text_varCRUCE, placement = "rigth", trigger = "hover",
+                                             options = list(container = "body")),
+                                   
+                                   
                                    checkboxInput("IC", "¿Deseas agregar intervalos de confianza?",value = F),
                                    #checkboxInput("ajuste_ene", "¿Deseas agregar los ajuste del MM ENE?",value = F),
                                    uiOutput("etiqueta"),
                                    selectInput("varSUBPOB", label = h5("Sub Población"), choices = "", selected = "", multiple = F),
+                          bsTooltip("varSUBPOB",text_varSUBPOB, placement = "rigth", trigger = "hover", options = list(container = "body")),
+  
                                    selectInput("varFACT1", label = h5("Variable para factor de expansión"), choices = "",selected ="", multiple = F),
                                    selectInput("varCONGLOM", label = h5("Variable para conglomerados"), choices = "", selected = "", multiple = F),
                                    selectInput("varESTRATOS",label = h5("Variable para estratos"), choices = "", selected = "", multiple = F), 
@@ -387,9 +422,11 @@ server <- function(input, output, session) {
   output$etiqueta <- renderUI({
     req(input$varCRUCE >= 1)
     req(labelled::is.labelled(datos()[[input$varCRUCE[1]]]))
-    checkboxInput("ETIQUETAS", "Sus datos poseen etiquetas, ¿Desea agregarlas?",value = F)
-    
-  })
+    tagList(
+    checkboxInput("ETIQUETAS", "Sus datos poseen etiquetas, ¿Desea agregarlas?",value = F),
+    bsTooltip("ETIQUETAS",text_etiqueta, placement = "rigth", trigger = "hover", options = list(container = "body"))
+    )
+    })
   
   output$denominador <- renderUI({
     req(input$tipoCALCULO == "Proporción")
@@ -499,19 +536,22 @@ server <- function(input, output, session) {
       title = "Definición de indicadores",
       
       HTML("<strong><h2>Insumos a evaluar:</h2></strong>      <br>
-<h4><strong>ES:</strong> Error Estandar.        <br>
+<h4><strong>ES:</strong> Error Estándar.        <br>
 <strong>Coef_var:</strong> Coeficiente de Variación.       <br>
 <strong>GL:</strong> Grados de Libertad.        <br>
 <strong>n:</strong> Casos muestrales.     </h4>     <br>
 <strong><h2>Resultados de la evaluación: </h2></strong>         <br>
 <h4><strong>eval_n:</strong> Evaluación de casos muestrales        <br>
 <strong>eval_gl:</strong> Evaluación de grados de libertad.        <br>
-<strong>tipo_eval:</strong> Tipo de evaluación utilizada: Puede ser por Error Estandar o por Coeficiente de variación.        <br>
+<strong>tipo_eval:</strong> Tipo de evaluación utilizada: Puede ser por Error Estándar o por Coeficiente de variación.        <br>
 <strong>Cuadrática:</strong> Resultado de evaluación por función cuadrática.        <br>
-<strong>eval_se:</strong> Resultado de la evaluación del Error Estandar.        <br>
+<strong>eval_se:</strong> Resultado de la evaluación del Error Estándar.        <br>
 <strong>eval_cv:</strong> Resultado de la evaluación del Coeficiente de variación.        <br>
 <strong>calidad:</strong> Evaluación final de la celda, puede ser: <p style=\"font-style: italic;\"> Fiable, Poco Fiable o No fiable </p> </h4>      <br>"
-      ), easyClose = T
+      ),
+      footer = tagList(
+        modalButton("Cerrar")
+      )
     ))
   })
   
